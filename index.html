@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cloth Simulation - PBD + WebGPU</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    <div id="ui-container">
+        <h1>Cloth Simulation (PBD + WebGPU)</h1>
+        
+        <div class="control-group">
+            <input type="checkbox" id="test-mode">
+            <label for="test-mode">Test Mode (Rotating Triangle)</label>
+        </div>
+        
+        <div class="control-group">
+            <input type="checkbox" id="gravity-toggle">
+            <label for="gravity-toggle">Enable Gravity</label>
+        </div>
+        
+        <div class="control-group">
+            <label for="render-mode">Render Mode:</label>
+            <select id="render-mode">
+                <option value="wireframe">Wireframe</option>
+                <option value="solid">Solid</option>
+            </select>
+        </div>
+        
+        <div class="info">
+            <p><strong>Corner vertices are pinned.</strong></p>
+            <p><strong>Center vertex oscillates creating waves.</strong></p>
+        </div>
+        
+        <div class="stats">
+            <p>FPS: <span id="fps">0</span></p>
+        </div>
+    </div>
+    
+    <div id="error-container" style="display: none;">
+        <div class="error-message">
+            <h2>WebGPU Not Supported</h2>
+            <p>Your browser does not support WebGPU. Please use Chrome 113+, Edge 113+, or Firefox Nightly with WebGPU enabled.</p>
+        </div>
+    </div>
+    
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>
+
+

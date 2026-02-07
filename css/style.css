@@ -1,0 +1,163 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    overflow: hidden;
+    background-color: #0f0f0f;
+}
+
+#canvas {
+    display: block;
+    width: 100vw;
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+}
+
+#ui-container {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(10px);
+    padding: 20px;
+    border-radius: 12px;
+    color: #ffffff;
+    min-width: 280px;
+    max-width: calc(50vw - 40px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+#ui-container h1 {
+    font-size: 18px;
+    margin-bottom: 16px;
+    font-weight: 600;
+    color: #4fc3f7;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    padding-bottom: 10px;
+}
+
+.control-group {
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.control-group label {
+    font-size: 14px;
+    color: #e0e0e0;
+    cursor: pointer;
+}
+
+#gravity-toggle {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: #4fc3f7;
+}
+
+#render-mode {
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+#render-mode:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+#render-mode option {
+    background: #2a2a2a;
+    color: #ffffff;
+}
+
+.info {
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.info p {
+    font-size: 13px;
+    color: #b0b0b0;
+    line-height: 1.6;
+    margin-bottom: 6px;
+}
+
+.info strong {
+    color: #81c784;
+}
+
+.stats {
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.stats p {
+    font-size: 13px;
+    color: #e0e0e0;
+}
+
+#fps {
+    color: #4fc3f7;
+    font-weight: 600;
+}
+
+#error-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.error-message {
+    background: #2d2d2d;
+    padding: 40px;
+    border-radius: 12px;
+    max-width: 500px;
+    text-align: center;
+    border: 1px solid #f44336;
+}
+
+.error-message h2 {
+    color: #f44336;
+    margin-bottom: 16px;
+}
+
+.error-message p {
+    color: #e0e0e0;
+    line-height: 1.6;
+}
+
+@media (max-width: 600px) {
+    #ui-container {
+        top: auto;
+        bottom: 20px;
+        left: 10px;
+        right: 10px;
+        min-width: unset;
+    }
+    
+    #ui-container h1 {
+        font-size: 16px;
+    }
+}
+
