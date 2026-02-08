@@ -1,0 +1,13 @@
+{
+  "name": "webgpu-sphere",
+  "version": "1.0.0",
+  "description": "WebGPU rotating sphere with separate shader files",
+  "main": "main.js",
+  "scripts": {
+    "start": "npx serve",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": ["webgpu", "graphics", "sphere", "shader"],
+  "author": "WebGPU Developer",
+  "license": "MIT"
+}
