@@ -11,6 +11,7 @@ export class TestTriangle {
         this.bindGroup = null;
         this.pipeline = null;
         this.bindGroupLayout = null;
+        this.depthTexture = null;  // Add dedicated depth texture
         
         this.rotation = 0.0;
         this.aspect = 1.0;
@@ -27,119 +28,138 @@ export class TestTriangle {
      * Initialize the test triangle
      */
     async initialize() {
-        // Define triangle vertices (with color per vertex)
-        const vertices = new Float32Array([
-            // Position (x, y, z)    Color (r, g, b)
-             0.0,  1.0,  0.0,       1.0, 0.0, 0.0,  // Top vertex - Red
-            -1.0, -1.0,  0.0,       0.0, 1.0, 0.0,  // Bottom left - Green
-             1.0, -1.0,  0.0,       0.0, 0.0, 1.0,  // Bottom right - Blue
-        ]);
-        
-        // Create vertex buffer
-        this.vertexBuffer = this.device.createBuffer({
-            size: vertices.byteLength,
-            usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
-        });
-        this.device.queue.writeBuffer(this.vertexBuffer, 0, vertices);
-        
-        // Create uniform buffer for rotation matrix and aspect ratio
-        const uniformData = new Float32Array(17);
-        this.uniformBuffer = this.device.createBuffer({
-            size: uniformData.byteLength,
-            usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
-        });
-        
-        // Create bind group layout
-        this.bindGroupLayout = this.device.createBindGroupLayout({
-            entries: [
-                {
-                    binding: 0,
-                    visibility: GPUShaderStage.VERTEX,
-                    buffer: {
-                        type: 'uniform',
-                    },
-                },
-            ],
-        });
-        
-        // Create bind group
-        this.bindGroup = this.device.createBindGroup({
-            layout: this.bindGroupLayout,
-            entries: [
-                {
-                    binding: 0,
-                    resource: {
-                        buffer: this.uniformBuffer,
-                    },
-                },
-            ],
-        });
-        
-        // Load shaders
-        const [vertexCode, fragmentCode] = await Promise.all([
-            fetch('../shaders/test-triangle-vertex.wgsl').then(r => r.text()),
-            fetch('../shaders/test-triangle-fragment.wgsl').then(r => r.text()),
-        ]);
-        
-        // Create separate shader modules (FIXED: Don't concatenate)
-        const vertexShaderModule = this.device.createShaderModule({
-            code: vertexCode,
-        });
+        try {
+            // Define triangle vertices (with color per vertex)
+            const vertices = new Float32Array([
+                // Position (x, y, z)    Color (r, g, b)
+                 0.0,  1.0,  0.0,       1.0, 0.0, 0.0,  // Top vertex - Red
+                -1.0, -1.0,  0.0,       0.0, 1.0, 0.0,  // Bottom left - Green
+                 1.0, -1.0,  0.0,       0.0, 0.0, 1.0,  // Bottom right - Blue
+            ]);
 
-        const fragmentShaderModule = this.device.createShaderModule({
-            code: fragmentCode,
-        });
-        
-        // Create pipeline layout
-        const pipelineLayout = this.device.createPipelineLayout({
-            bindGroupLayouts: [this.bindGroupLayout],
-        });
-        
-        // Create render pipeline with separate shader modules
-        this.pipeline = this.device.createRenderPipeline({
-            layout: pipelineLayout,
-            vertex: {
-                module: vertexShaderModule,
-                entryPoint: 'main',
-                buffers: [
+            // Create vertex buffer
+            this.vertexBuffer = this.device.createBuffer({
+                size: vertices.byteLength,
+                usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
+            });
+            this.device.queue.writeBuffer(this.vertexBuffer, 0, vertices);
+
+            // Create uniform buffer for rotation matrix and aspect ratio
+            const uniformData = new Float32Array(17);
+            this.uniformBuffer = this.device.createBuffer({
+                size: uniformData.byteLength,
+                usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+            });
+
+            // Create bind group layout
+            this.bindGroupLayout = this.device.createBindGroupLayout({
+                entries: [
                     {
-                        arrayStride: 24,
-                        attributes: [
-                            {
-                                shaderLocation: 0,
-                                offset: 0,
-                                format: 'float32x3',
-                            },
-                            {
-                                shaderLocation: 1,
-                                offset: 12,
-                                format: 'float32x3',
-                            },
-                        ],
+                        binding: 0,
+                        visibility: GPUShaderStage.VERTEX,
+                        buffer: {
+                            type: 'uniform',
+                        },
                     },
                 ],
-            },
-            fragment: {
-                module: fragmentShaderModule,
-                entryPoint: 'main',
-                targets: [
+            });
+
+            // Create bind group
+            this.bindGroup = this.device.createBindGroup({
+                layout: this.bindGroupLayout,
+                entries: [
                     {
-                        format: this.format,
+                        binding: 0,
+                        resource: {
+                            buffer: this.uniformBuffer,
+                        },
                     },
                 ],
-            },
-            primitive: {
-                topology: 'triangle-list',
-                cullMode: 'back',
-            },
-            depthStencil: {
-                format: 'depth24plus',
-                depthWriteEnabled: true,
-                depthCompare: 'less',
-            },
-        });
-        
-        this.updateRotation();
+            });
+            
+            // Load shaders
+            const [vertexCode, fragmentCode] = await Promise.all([
+                fetch('../shaders/test-triangle-vertex.wgsl').then(r => r.text()),
+                fetch('../shaders/test-triangle-fragment.wgsl').then(r => r.text()),
+            ]);
+
+            console.log('Test triangle vertex shader code length:', vertexCode.length);
+            console.log('Test triangle fragment shader code length:', fragmentCode.length);
+
+            // Validate shader codes
+            if (!vertexCode.trim()) {
+                throw new Error('Test triangle vertex shader code is empty');
+            }
+
+            if (!fragmentCode.trim()) {
+                throw new Error('Test triangle fragment shader code is empty');
+            }
+
+            // Create separate shader modules (FIXED: Don't concatenate)
+            const vertexShaderModule = this.device.createShaderModule({
+                code: vertexCode,
+            });
+
+            const fragmentShaderModule = this.device.createShaderModule({
+                code: fragmentCode,
+            });
+
+            // Create pipeline layout
+            const pipelineLayout = this.device.createPipelineLayout({
+                bindGroupLayouts: [this.bindGroupLayout],
+            });
+
+            // Create render pipeline with separate shader modules
+            this.pipeline = this.device.createRenderPipeline({
+                layout: pipelineLayout,
+                vertex: {
+                    module: vertexShaderModule,
+                    entryPoint: 'main',
+                    buffers: [
+                        {
+                            arrayStride: 24,
+                            attributes: [
+                                {
+                                    shaderLocation: 0,
+                                    offset: 0,
+                                    format: 'float32x3',
+                                },
+                                {
+                                    shaderLocation: 1,
+                                    offset: 12,
+                                    format: 'float32x3',
+                                },
+                            ],
+                        },
+                    ],
+                },
+                fragment: {
+                    module: fragmentShaderModule,
+                    entryPoint: 'main',
+                    targets: [
+                        {
+                            format: this.format,
+                        },
+                    ],
+                },
+                primitive: {
+                    topology: 'triangle-list',
+                    cullMode: 'back',
+                },
+                depthStencil: {
+                    format: 'depth24plus',
+                    depthWriteEnabled: true,
+                    depthCompare: 'less',
+                },
+            });
+
+            // Create initial depth texture (will be created by resizeDepthTexture)
+            this.updateRotation();
+            console.log('Test triangle initialized successfully');
+        } catch (error) {
+            console.error('Failed to initialize test triangle:', error);
+            throw error;
+        }
     }
     
     /**
@@ -172,7 +192,7 @@ export class TestTriangle {
     /**
      * Render the triangle
      */
-    render(commandEncoder, context, depthTexture) {
+    render(commandEncoder, context) {
         try {
             this.updateRotation();
             
@@ -180,6 +200,12 @@ export class TestTriangle {
             
             if (!currentTexture) {
                 console.error('Failed to get current texture in test triangle');
+                return;
+            }
+
+            // Use own depth texture
+            if (!this.depthTexture) {
+                console.error('Depth texture not initialized in test triangle');
                 return;
             }
 
@@ -193,7 +219,7 @@ export class TestTriangle {
                     },
                 ],
                 depthStencilAttachment: {
-                    view: depthTexture ? depthTexture.createView() : null,
+                    view: this.depthTexture.createView(),
                     depthClearValue: 1.0,
                     depthLoadOp: 'clear',
                     depthStoreOp: 'store',
@@ -212,4 +238,23 @@ export class TestTriangle {
             console.error('Error rendering test triangle:', error);
         }
     }
+
+    /**
+     * Resize depth texture to match canvas size
+     */
+    resizeDepthTexture(width, height) {
+        if (this.depthTexture) {
+            this.depthTexture.destroy();
+        }
+
+        this.depthTexture = this.device.createTexture({
+            size: [width, height],
+            format: 'depth24plus',
+            usage: GPUTextureUsage.RENDER_ATTACHMENT,
+        });
+
+        console.log('Test triangle depth texture resized to:', width, 'x', height);
+    }
 }
+
+

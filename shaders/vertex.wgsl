@@ -45,3 +45,4 @@ fn main(input: VertexInput) -> VertexOutput {
     
     return output;
 }
+

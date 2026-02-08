@@ -31,7 +31,7 @@ export const config = {
     
     // Camera parameters
     camera: {
-        position: { x: 0, y: 8, z: 12 },
+        position: { x: 0, y: 5, z: 10 },
         target: { x: 0, y: 0, z: 0 },
         up: { x: 0, y: 1, z: 0 },
         fov: 45,               // Field of view in degrees
@@ -60,3 +60,4 @@ export function getDeriveConfig() {
         centerIndex: Math.floor(resolutionX / 2) + Math.floor(resolutionY / 2) * resolutionX,
     };
 }
+

@@ -5,48 +5,25 @@ import { config } from '../utils/config.js';
  */
 export async function initWebGPU(canvas) {
     if (!navigator.gpu) {
-        throw new Error('WebGPU is not supported in this browser');
+        throw new Error('WebGPU not supported');
     }
     
-    const adapter = await navigator.gpu.requestAdapter({
-        powerPreference: 'high-performance',
-    });
-    
+    const adapter = await navigator.gpu.requestAdapter();
     if (!adapter) {
-        throw new Error('Failed to get WebGPU adapter');
+        throw new Error('No appropriate GPUAdapter found');
     }
     
-    console.log('WebGPU adapter:', adapter.info);
-
-    const device = await adapter.requestDevice({
-        requiredLimits: {
-            maxStorageBufferBindingSize: adapter.limits.maxStorageBufferBindingSize,
-        },
-    });
-    
-    if (!device) {
-        throw new Error('Failed to create WebGPU device');
-    }
-    
-    console.log('WebGPU device created successfully');
-    
+    const device = await adapter.requestDevice();
     const context = canvas.getContext('webgpu');
     
-    if (!context) {
-        throw new Error('Failed to get WebGPU context from canvas');
-    }
-    
     const format = navigator.gpu.getPreferredCanvasFormat();
-    
     context.configure({
-        device,
-        format,
-        alphaMode: 'premultiplied',
+        device: device,
+        format: format,
+        alphaMode: 'opaque',
     });
     
-    console.log('WebGPU context configured with format:', format);
-    
-    return { device, context, format, adapter };
+    return { device, context, format };
 }
 
 /**
@@ -172,3 +149,4 @@ export async function loadShaderModule(device, filepath) {
     const code = await response.text();
     return device.createShaderModule({ code });
 }
+

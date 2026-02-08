@@ -42,14 +42,16 @@ export class Renderer {
         }
         
         // Create uniform buffer for view-projection matrix and color
+        // Note: WebGPU requires uniform buffers to be aligned to 256-byte boundaries
         const uniformData = new Float32Array(16 + 4); // matrix (16) + color (4)
+        const alignedSize = Math.ceil(uniformData.byteLength / 256) * 256; // Align to 256-byte boundary
         this.uniformBuffer = createBuffer(
             this.device,
-            uniformData.byteLength,
+            alignedSize,
             GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
         );
         
-        console.log('Uniform buffer created');
+        console.log('Uniform buffer created with size:', alignedSize);
         
         // Create render bind group layout
         this.bindGroupLayout = createBindGroupLayout(this.device, [
@@ -67,7 +69,7 @@ export class Renderer {
             usage: GPUTextureUsage.RENDER_ATTACHMENT,
         });
         
-        console.log('Depth texture created');
+        console.log('Depth texture created with size:', canvas.width, canvas.height);
         
         // Update uniform buffer with initial values
         this.updateUniforms();
@@ -79,12 +81,25 @@ export class Renderer {
      * Load shaders and create render pipelines
      */
     async createRenderPipelines() {
+        try {
         // Load vertex and fragment shaders as separate modules
         const [vertexCode, fragmentCode] = await Promise.all([
             fetch('../shaders/vertex.wgsl').then(r => r.text()),
             fetch('../shaders/fragment.wgsl').then(r => r.text()),
         ]);
         
+            console.log('Vertex shader code length:', vertexCode.length);
+            console.log('Fragment shader code length:', fragmentCode.length);
+
+            // Validate shader codes
+            if (!vertexCode.trim()) {
+                throw new Error('Vertex shader code is empty');
+            }
+
+            if (!fragmentCode.trim()) {
+                throw new Error('Fragment shader code is empty');
+            }
+
         const vertexShaderModule = this.device.createShaderModule({
             code: vertexCode,
         });
@@ -152,6 +167,12 @@ export class Renderer {
         
         this.bindGroups.wireframe = wireframeBindGroup;
         this.bindGroups.solid = solidBindGroup;
+
+            console.log('Render pipelines created successfully');
+        } catch (error) {
+            console.error('Failed to create render pipelines:', error);
+            throw error;
+    }
     }
     
     /**

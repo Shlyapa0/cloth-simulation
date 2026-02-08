@@ -1,26 +1,21 @@
 ﻿import { initWebGPU } from './webgpu-init.js';
-import { ClothSimulation } from './cloth-simulation.js';
-import { Renderer } from './renderer.js';
+import { SphereRenderer } from './sphere-renderer.js';
 import { UIHandler } from './ui.js';
-import { TestTriangle } from './test-triangle.js';
-import { config } from '../utils/config.js';
 
-class ClothSimulationApp {
+class SimpleApp {
     constructor() {
         this.canvas = null;
         this.device = null;
         this.context = null;
         this.format = null;
         
-        this.simulation = null;
         this.renderer = null;
         this.uiHandler = null;
-        this.testTriangle = null;
-        
-        this.testMode = false;
         
         this.isRunning = false;
         this.animationFrameId = null;
+        
+        this.rotationAngle = 0;
     }
     
     async initialize() {
@@ -44,16 +39,10 @@ class ClothSimulationApp {
             this.context = webgpu.context;
             this.format = webgpu.format;
             
-            this.simulation = new ClothSimulation(this.device);
-            await this.simulation.initialize();
-            
-            this.renderer = new Renderer(this.device, this.context, this.format);
+            this.renderer = new SphereRenderer(this.device, this.context, this.format);
             await this.renderer.initialize();
             
-            this.testTriangle = new TestTriangle(this.device, this.format);
-            await this.testTriangle.initialize();
-            
-            this.uiHandler = new UIHandler(this.simulation, this.renderer, this);
+            this.uiHandler = new UIHandler(this.renderer, this);
             this.uiHandler.initialize();
             
             window.addEventListener('resize', () => this.onResize());
@@ -62,7 +51,7 @@ class ClothSimulationApp {
             
             this.start();
             
-            console.log('Cloth simulation initialized successfully!');
+            console.log('Simple app initialized successfully!');
             
         } catch (error) {
             console.error('Failed to initialize:', error);
@@ -146,28 +135,19 @@ class ClothSimulationApp {
     }
     
     resizeCanvas() {
-    const width = window.innerWidth;
-    const height = window.innerHeight;
-    
-    this.canvas.width = width;
-    this.canvas.height = height;
-    if (this.renderer) {
-        this.renderer.resizeDepthTexture(width, height);
-        this.renderer.updateUniforms();
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+        
+        this.canvas.width = width;
+        this.canvas.height = height;
+        if (this.renderer) {
+            this.renderer.resizeDepthTexture(width, height);
+            this.renderer.updateUniforms();
+        }
     }
-    
-    if (this.testTriangle) {
-        const aspect = width / height;
-        this.testTriangle.setAspectRatio(aspect);
-    }
-}
     
     onResize() {
         this.resizeCanvas();
-    }
-    
-    setTestMode(enabled) {
-        this.testMode = enabled;
     }
     
     start() {
@@ -185,24 +165,13 @@ class ClothSimulationApp {
     animate() {
         if (!this.isRunning) return;
         
+        // Rotate the sphere
+        this.rotationAngle += 0.01;
+        
         const commandEncoder = this.device.createCommandEncoder();
         
-        if (this.testMode) {
-            this.testTriangle.render(
-                commandEncoder,
-                this.context,
-                this.renderer.depthTexture
-            );
-        } else {
-            this.simulation.simulate(commandEncoder);
-            
-            this.renderer.render(
-                commandEncoder,
-                this.simulation.getPositionBuffer(),
-                this.simulation.getIndexBuffer(),
-                this.simulation.getTriangleCount()
-            );
-        }
+        // Render the sphere
+        this.renderer.render(commandEncoder);
         
         this.device.queue.submit([commandEncoder.finish()]);
         
@@ -213,7 +182,6 @@ class ClothSimulationApp {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    const app = new ClothSimulationApp();
+    const app = new SimpleApp();
     app.initialize();
 });
-
