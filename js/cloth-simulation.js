@@ -64,7 +64,7 @@ export class ClothSimulation {
         });
         this.inverseMassBuffer.unmap();
         
-        // Create index buffer
+        // Create index buffer - this is used for rendering, not compute
         this.indexBuffer = this.device.createBuffer({
             size: this.triangleCount * 3 * 2, // 3 indices per triangle * 2 bytes per index
             usage: GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST,
@@ -207,41 +207,47 @@ export class ClothSimulation {
                 {
                     binding: 0,
                     visibility: GPUShaderStage.COMPUTE,
-                    buffer: {}
+                    buffer: {
+                        type: 'uniform'
+                    }
                 },
                 {
                     binding: 1,
                     visibility: GPUShaderStage.COMPUTE,
-                    buffer: {}
+                    buffer: {
+                        type: 'storage'
+                    }
                 },
                 {
                     binding: 2,
                     visibility: GPUShaderStage.COMPUTE,
-                    buffer: {}
+                    buffer: {
+                        type: 'storage'
+                    }
                 },
                 {
                     binding: 3,
                     visibility: GPUShaderStage.COMPUTE,
-                    buffer: {}
+                    buffer: {
+                        type: 'storage'
+                    }
                 },
                 {
                     binding: 4,
                     visibility: GPUShaderStage.COMPUTE,
-                    buffer: {}
+                    buffer: {
+                        type: 'storage'
+                    }
                 },
                 {
                     binding: 5,
                     visibility: GPUShaderStage.COMPUTE,
-                    buffer: {}
-                },
-                {
-                    binding: 6,
-                    visibility: GPUShaderStage.COMPUTE,
-                    buffer: {}
+                    buffer: {
+                        type: 'storage'
+                    }
                 }
             ]
         });
-        
         // Create pipeline layout
         this.pipelineLayout = this.device.createPipelineLayout({
             bindGroupLayouts: [this.bindGroupLayout]
@@ -358,11 +364,8 @@ export class ClothSimulation {
                 {
                     binding: 5,
                     resource: { buffer: this.restLengthBuffer }
-                },
-                {
-                    binding: 6,
-                    resource: { buffer: this.indexBuffer }
                 }
+                // Note: indexBuffer is not included in compute bind group as it's only used for rendering
             ]
         });
     }

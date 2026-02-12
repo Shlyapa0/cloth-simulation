@@ -30,7 +30,7 @@ export class ClothRenderer {
         });
         
         // Create render pipeline
-        this.createRenderPipeline();
+        this.pipelinePromise = this.createRenderPipeline();
     }
     
     // Helper function to fetch shader code
@@ -42,56 +42,56 @@ export class ClothRenderer {
         return await response.text();
     }
     
-    createRenderPipeline() {
-        // Load shaders
-        this.fetchShader('./shaders/vertex.wgsl')
-            .then(vertexShaderCode => {
-                this.fetchShader('./shaders/fragment.wgsl')
-                    .then(fragmentShaderCode => {
-                        // Create shader modules
-                        const vertexModule = this.device.createShaderModule({
-                            code: vertexShaderCode
-                        });
-                        
-                        const fragmentModule = this.device.createShaderModule({
-                            code: fragmentShaderCode
-                        });
-                        
-                        // Create render pipeline
-                        this.pipeline = this.device.createRenderPipeline({
-                            layout: this.pipelineLayout,
-                            vertex: {
-                                module: vertexModule,
-                                entryPoint: 'vertex_main',
-                                buffers: [{
-                                    arrayStride: 3 * 4, // 3 floats per vertex (x,y,z)
-                                    attributes: [
-                                        { shaderLocation: 0, offset: 0, format: 'float32x3' }, // position
-                                    ]
-                                }]
-                            },
-                            fragment: {
-                                module: fragmentModule,
-                                entryPoint: 'fragment_main',
-                                targets: [{ format: this.format }]
-                            },
-                            primitive: {
-                                topology: 'triangle-list',
-                                cullMode: 'back'
-                            },
-                            depthStencil: {
-                                depthWriteEnabled: true,
-                                depthCompare: 'less',
-                                format: 'depth24plus'
-                            }
-                        });
-                        
-                        console.log('Render pipeline created successfully');
-                    });
-            })
-            .catch(error => {
-                console.error('Error loading shaders:', error);
+    async createRenderPipeline() {
+        try {
+            // Load shaders
+            const vertexShaderCode = await this.fetchShader('./shaders/vertex.wgsl');
+            const fragmentShaderCode = await this.fetchShader('./shaders/fragment.wgsl');
+            
+            // Create shader modules
+            const vertexModule = this.device.createShaderModule({
+                code: vertexShaderCode
             });
+            
+            const fragmentModule = this.device.createShaderModule({
+                code: fragmentShaderCode
+            });
+            
+            // Create render pipeline
+            this.pipeline = this.device.createRenderPipeline({
+                layout: this.pipelineLayout,
+                vertex: {
+                    module: vertexModule,
+                    entryPoint: 'vertex_main',
+                    buffers: [{
+                        arrayStride: 3 * 4, // 3 floats per vertex (x,y,z)
+                        attributes: [
+                            { shaderLocation: 0, offset: 0, format: 'float32x3' }, // position
+                        ]
+                    }]
+                },
+                fragment: {
+                    module: fragmentModule,
+                    entryPoint: 'fragment_main',
+                    targets: [{ format: this.format }]
+                },
+                primitive: {
+                    topology: 'triangle-list',
+                    cullMode: 'back'
+                },
+                depthStencil: {
+                    depthWriteEnabled: true,
+                    depthCompare: 'less',
+                    format: 'depth24plus'
+                }
+            });
+            
+            console.log('Render pipeline created successfully');
+            return this.pipeline;
+        } catch (error) {
+            console.error('Error loading shaders or creating pipeline:', error);
+            throw error;
+        }
     }
     
     createRenderBindGroup(uniformBuffer) {
@@ -106,7 +106,17 @@ export class ClothRenderer {
         });
     }
     
-    render(positionBuffer, uniformBuffer, cloth) {
+    async render(positionBuffer, uniformBuffer, cloth) {
+        // Wait for pipeline to be ready
+        if (!this.pipeline) {
+            try {
+                await this.pipelinePromise;
+            } catch (error) {
+                console.error('Failed to create render pipeline:', error);
+                return;
+            }
+        }
+        
         // Create command encoder
         const commandEncoder = this.device.createCommandEncoder();
         const renderPassDescriptor = {

@@ -1,10 +1,10 @@
 // PBD Stage 2: Solve distance constraints
 @group(0) @binding(0) var<uniform> uniforms : vec4f;
 @group(0) @binding(1) var<storage, read_write> positions : array<vec3f>;
-@group(0) @binding(2) var<storage, read_write> velocities : array<vec4f>;
-@group(0) @binding(3) var<storage, read_write> inverseMasses : array<f32>;
-@group(0) @binding(4) var<storage, read_write> constraintIndices : array<u32>;
-@group(0) @binding(5) var<storage, read_write> restLengths : array<f32>;
+@group(0) @binding(2) var<storage, read> velocities : array<vec4f>;
+@group(0) @binding(3) var<storage, read> inverseMasses : array<f32>;
+@group(0) @binding(4) var<storage, read> constraintIndices : array<u32>;
+@group(0) @binding(5) var<storage, read> restLengths : array<f32>;
 
 @compute
 @workgroup_size(64)
